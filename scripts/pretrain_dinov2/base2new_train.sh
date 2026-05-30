@@ -2,16 +2,16 @@
 
 DATA="/data2/workspace_hyw/promptkd/promptkd_data"
 TRAINER=DINOv2Pretrain
-CFG=vitb14_16shot
+CFG=vitl14_16shot
 SHOTS=16
 
 DATASET=$1
 SEED=$2
 GPU_ID=$3
 SAVE_DIR=${SAVE_DIR:-"./teacher_model/${DATASET}/DINOv2Teacher"}
-SAVE_NAME=${SAVE_NAME:-"dinov2_vitb14.pth"}
+SAVE_NAME=${SAVE_NAME:-"dinov2_vitl14.pth"}
 
-INIT_CKPT=${INIT_CKPT:-"./clip/dinov2_vitb14_pretrain.pth"}
+INIT_CKPT=${INIT_CKPT:-"./clip/dinov2_vitl14_pretrain.pth"}
 DINO_REPO_OR_DIR=${DINO_REPO_OR_DIR:-"/data2/workspace_hyw/promptkd/LF-DTPKD/dinov2"}
 
 DIR=output/dinov2_pretrain/base2new/${DATASET}/shots_${SHOTS}/${CFG}/seed_${SEED}

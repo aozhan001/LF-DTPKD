@@ -2,16 +2,16 @@
 
 DATA="/data2/workspace_hyw/promptkd/promptkd_data"
 TRAINER=PromptKDDINO
-CFG=vit_b16_dinov2_b14
+CFG=vit_b16_dinov2_l14
 SHOTS=0
 
 DATASET=$1
 SEED=$2
 GPU_ID=$3
-KD_WEIGHT=${KD_WEIGHT:-1.0}
-DINO_WEIGHT=${DINO_WEIGHT:-2.0}
-#DINO_CKPT=${DINO_CKPT:-"./teacher_model/${DATASET}/DINOv2Teacher/dinov2_vitb14.pth"}
-DINO_CKPT=${DINO_CKPT:-"./clip/dinov2_vitb14_pretrain.pth"}
+KD_WEIGHT=$4
+DINO_WEIGHT=$5
+#DINO_CKPT=${DINO_CKPT:-"./teacher_model/${DATASET}/DINOv2Teacher/dinov2_vitl14.pth"}
+DINO_CKPT=${DINO_CKPT:-"./clip/dinov2_vitl14_pretrain.pth"}
 DINO_REPO_OR_DIR=${DINO_REPO_OR_DIR:-"/data2/workspace_hyw/promptkd/LF-DTPKD/dinov2"}
 
 DIR=output/base2new/train_base/${DATASET}/shots_${SHOTS}/${TRAINER}/${CFG}/seed_${SEED}
