@@ -7,15 +7,42 @@ import torch.nn.functional as F
 from utils.dino_transforms import renormalize_for_dino
 
 
-def build_dinov2_model(model_name="dinov2_vitb14", repo_or_dir=""):
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def resolve_dinov2_repo_or_dir(repo_or_dir=""):
+    repo_or_dir = os.path.expanduser(str(repo_or_dir).strip())
+    if repo_or_dir:
+        return repo_or_dir
+
+    default_repo_or_dir = os.path.join(_PROJECT_ROOT, "dinov2")
+    if os.path.isdir(default_repo_or_dir):
+        return default_repo_or_dir
+
+    return ""
+
+
+def resolve_dinov2_checkpoint_path(ckpt_path="", model_name="dinov2_vitl14"):
+    ckpt_path = os.path.expanduser(str(ckpt_path).strip())
+    if ckpt_path:
+        return ckpt_path
+
+    default_ckpt_path = os.path.join(_PROJECT_ROOT, "clip", f"{model_name}_pretrain.pth")
+    if os.path.isfile(default_ckpt_path):
+        return default_ckpt_path
+
+    return ""
+
+
+def build_dinov2_model(model_name="dinov2_vitl14", repo_or_dir="", pretrained=True):
     """Build a DINOv2 model, preferring a local repo when provided."""
     errors = []
+    repo_or_dir = resolve_dinov2_repo_or_dir(repo_or_dir)
 
     if repo_or_dir:
-        repo_or_dir = os.path.expanduser(repo_or_dir)
         if os.path.isdir(repo_or_dir):
             try:
-                return torch.hub.load(repo_or_dir, model_name, source="local")
+                return torch.hub.load(repo_or_dir, model_name, source="local", pretrained=pretrained)
             except Exception as exc:
                 errors.append(
                     "Failed to load DINOv2 from local repo '{}': {}".format(repo_or_dir, exc)
@@ -24,7 +51,7 @@ def build_dinov2_model(model_name="dinov2_vitb14", repo_or_dir=""):
             errors.append("DINO_REPO_OR_DIR does not exist: {}".format(repo_or_dir))
 
     try:
-        return torch.hub.load("facebookresearch/dinov2", model_name)
+        return torch.hub.load("facebookresearch/dinov2", model_name, pretrained=pretrained)
     except Exception as exc:
         errors.append(
             "Failed to load DINOv2 model '{}' from torch.hub: {}".format(model_name, exc)
@@ -125,12 +152,16 @@ class DINOv2Teacher(nn.Module):
         super().__init__()
         dino_cfg = cfg.TRAINER.PROMPTKD_DINO
         self.cfg = cfg
+        ckpt_path = resolve_dinov2_checkpoint_path(
+            ckpt_path=dino_cfg.DINO_CKPT,
+            model_name=dino_cfg.DINO_MODEL_NAME,
+        )
         self.model = build_dinov2_model(
             model_name=dino_cfg.DINO_MODEL_NAME,
             repo_or_dir=dino_cfg.DINO_REPO_OR_DIR,
+            pretrained=not bool(ckpt_path),
         )
 
-        ckpt_path = str(dino_cfg.DINO_CKPT).strip()
         if ckpt_path:
             if not os.path.isfile(ckpt_path):
                 raise FileNotFoundError("DINO checkpoint not found: {}".format(ckpt_path))

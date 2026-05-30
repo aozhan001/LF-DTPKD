@@ -10,12 +10,17 @@ from torch.cuda.amp import GradScaler, autocast
 from dassl.engine import TRAINER_REGISTRY, TrainerX
 from dassl.optim import build_lr_scheduler, build_optimizer
 
-from trainers.dinov2_teacher import build_dinov2_model, extract_dino_features, load_dinov2_checkpoint
+from trainers.dinov2_teacher import (
+    build_dinov2_model,
+    extract_dino_features,
+    load_dinov2_checkpoint,
+    resolve_dinov2_checkpoint_path,
+)
 from utils.dino_transforms import make_two_dino_views
 
 
 class DINOProjectionHead(nn.Module):
-    def __init__(self, in_dim=768, out_dim=65536, bottleneck_dim=256):
+    def __init__(self, in_dim=1024, out_dim=65536, bottleneck_dim=256):
         super().__init__()
         hidden_dim = max(in_dim, 2048)
         self.mlp = nn.Sequential(
@@ -39,13 +44,17 @@ class DINOv2SelfDistillModel(nn.Module):
     def __init__(self, cfg):
         super().__init__()
         pre_cfg = cfg.TRAINER.DINOV2_PRETRAIN
+        init_ckpt = resolve_dinov2_checkpoint_path(
+            ckpt_path=pre_cfg.INIT_CKPT,
+            model_name=pre_cfg.MODEL_NAME,
+        )
         self.student_backbone = build_dinov2_model(
             model_name=pre_cfg.MODEL_NAME,
             repo_or_dir=pre_cfg.DINO_REPO_OR_DIR,
+            pretrained=not bool(init_ckpt),
         )
         self.teacher_backbone = copy.deepcopy(self.student_backbone)
 
-        init_ckpt = str(pre_cfg.INIT_CKPT).strip()
         if init_ckpt:
             if not os.path.isfile(init_ckpt):
                 raise FileNotFoundError("DINOv2 init checkpoint not found: {}".format(init_ckpt))
