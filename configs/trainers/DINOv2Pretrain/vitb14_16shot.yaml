@@ -1,0 +1,54 @@
+DATALOADER:
+  TRAIN_X:
+    BATCH_SIZE: 16
+  TEST:
+    BATCH_SIZE: 100
+  NUM_WORKERS: 8
+
+INPUT:
+  SIZE: (224, 224)
+  INTERPOLATION: "bicubic"
+  PIXEL_MEAN: [0.48145466, 0.4578275, 0.40821073]
+  PIXEL_STD: [0.26862954, 0.26130258, 0.27577711]
+  TRANSFORMS: ["random_resized_crop", "random_flip", "normalize"]
+
+OPTIM:
+  NAME: "adamw"
+  LR: 2e-4
+  WEIGHT_DECAY: 0.04
+  MAX_EPOCH: 50
+  LR_SCHEDULER: "cosine"
+  WARMUP_EPOCH: 10
+  WARMUP_TYPE: "constant"
+  WARMUP_CONS_LR: 1e-6
+
+TRAIN:
+  PRINT_FREQ: 20
+
+MODEL:
+  BACKBONE:
+    NAME: "ViT-B/16"
+
+TEST:
+  FINAL_MODEL: "last_step"
+  NO_TEST: True
+
+DATASET:
+  NUM_SHOTS: 16
+
+TRAINER:
+  NAME: DINOv2Pretrain
+  DINOV2_PRETRAIN:
+    MODEL_NAME: "dinov2_vitb14"
+    DINO_REPO_OR_DIR: ""
+    INIT_CKPT: ""
+    SAVE_DIR: "./teacher_model"
+    SAVE_NAME: "teacher.pth"
+    FEATURE_DIM: 768
+    OUT_DIM: 8192
+    MOMENTUM: 0.996
+    TEMPERATURE: 0.07
+    CENTER_MOMENTUM: 0.9
+    PREC: "amp"
+    STUDENT_TEMPERATURE: 0.1
+    TEACHER_TEMP_WARMUP: 10
